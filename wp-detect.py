@@ -10,10 +10,11 @@ url_dosyasi = input("URL dosyasının ismini giriniz: ")
 
 
 
+
 def url_chech(url_dosyasi):
-    print("URL check işlemi yapılıyor...")
-    check_list = ["/wp-json","/license.txt"]
-    try:
+    print("URL kontrol işlemi yapılıyor...")
+    check_list = ["/wp-json","/license.txt"] #iki dosya eğer ki varsa çok yüksek ihtimalle wordpress kullanılıyordur. bundan dolayı bu
+    try:                                     #dosyalara istek atıyor.
         url = open(url_dosyasi+".txt", "r+")
         url_list = []
         
@@ -21,13 +22,18 @@ def url_chech(url_dosyasi):
         return_200_only_domain = []
         for i in url:
             a = i.split("\n")
-            url_list.append(a[0])
+            sub_and_domain = tldextract.extract(a[0])
+            if(len(sub_and_domain.subdomain) != 0):
+                url_list.append(sub_and_domain.subdomain + "." + sub_and_domain.domain + "." + sub_and_domain.suffix)
+            else:
+                url_list.append(sub_and_domain.domain + "." + sub_and_domain.suffix)
+            
         
         for i in url_list:
             for a in check_list:
                 try:
                     
-                    request = requests.get("http://"+i+a,timeout=None,verify=False,allow_redirects=False)
+                    request = requests.get("http://"+i+a,timeout=None,verify=False,allow_redirects=False) 
                     
                    
                     print(f"{request.status_code} http://{i}{a}")
@@ -53,7 +59,7 @@ def url_chech(url_dosyasi):
     
 
 def source_check(only_return_200):
-    print("Source Code Check yapılıyor..")
+    print("Kaynak kod analizi yapılıyor..")
     wp_using = []
     for i in only_return_200:
         try:
@@ -69,16 +75,16 @@ def source_check(only_return_200):
                             if i in wp_using: #daha önceden wp_using listesine yazıldıysa pas geçiyor
                                  pass
                             else:
-                                wp_using.append(f"{i} sitesi Wordpress kullanıyor ve sürümü: {wordpress_version}")
+                                wp_using.append(f"{i} sitesi Wordpress kullanıyor ve sürümü: {wordpress_version}") #yazılmadıysa yazıyor fakat sürümü yazmıyor
+
+                            #burada hem sürümü hem de wordpress kullandığını yazıyor çünkü 15 karakterden az
+                            #bir değere sahip.
 
                         else:
                             if i in wp_using:
                                 pass
                             else:
-                                wp_using.append(i) #yazılmadıysa yazıyor fakat sürümü yazmıyor
-
-                            #burada hem sürümü hem de wordpress kullandığını yazıyor çünkü 15 karakterden az
-                            #bir değere sahip.
+                                wp_using.append(i) 
                 
         except requests.exceptions.Timeout:
                 #print(f"Timeout occurred: http://{i}{a}")
